@@ -92,3 +92,18 @@ class TestBasic(ObjprintTestCase):
 
         self.assertRaises(TypeError, lambda: op.register_formatter(1, hex))
         self.assertRaises(TypeError, lambda: op.register_formatter(int, 1))
+
+    def test_starred_args_arg_name(self):
+        args = [1, 2, 3]
+        with io.StringIO() as buf, redirect_stdout(buf):
+            op(1.1, 2.2, 3.3, *args, arg_name=True, color=False)
+            output = buf.getvalue()
+        
+        self.assertIn("1.1:", output.split("\n")[0])
+        self.assertIn("2.2:", output.split("\n")[2])
+        self.assertIn("3.3:", output.split("\n")[4])
+        
+        self.assertIn("*args:", output.split("\n")[6])
+        self.assertIn("[1, 2, 3]", output.split("\n")[7])
+        
+        self.assertIn("(1.1, 2.2, 3.3, 1, 2, 3)", output.strip().split("\n")[-1])
