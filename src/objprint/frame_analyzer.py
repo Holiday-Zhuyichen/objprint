@@ -28,11 +28,11 @@ class FrameAnalyzer:
             if depth == 0 and token.string == "(":
                 depth = 1
             elif depth == 1 and token.string == ")":
-                if curr_arg:
+                if curr_arg:  # Prevent outputing ":" if the function call ends in ,)
                     args.append(curr_arg.strip())
                 break
             elif depth == 1 and token.string == ",":
-                if curr_arg:
+                if curr_arg:  # Prevent outputing ":" if the function call ends in ,)
                     args.append(curr_arg.strip())
                 curr_arg = ""
                 in_starred = False  # Reset after comma
