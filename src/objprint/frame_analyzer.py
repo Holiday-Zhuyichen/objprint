@@ -22,26 +22,40 @@ class FrameAnalyzer:
         args = []
         curr_arg = ""
         last_pos = (0, 0)
+        in_starred = False  # Track starred expressions (*args)
+
         for token in tokenize.generate_tokens(func_call_io.readline):
             if depth == 0 and token.string == "(":
                 depth = 1
             elif depth == 1 and token.string == ")":
-                args.append(curr_arg.strip())
+                if curr_arg:
+                    args.append(curr_arg.strip())
                 break
             elif depth == 1 and token.string == ",":
-                args.append(curr_arg.strip())
+                if curr_arg:
+                    args.append(curr_arg.strip())
                 curr_arg = ""
+                in_starred = False  # Reset after comma
             elif depth >= 1:
                 if token.string in "([{":
                     depth += 1
                 elif token.string in ")]}":
                     depth -= 1
                 if depth >= 1 and token.type != tokenize.NL:
-                    if token.start[0] != last_pos[0] or token.start[1] - last_pos[1] > 0:
-                        curr_arg += f" {token.string}"
-                    else:
+                    # Handle starred arguments (*args) as single entries
+                    if token.string == "*" and not curr_arg.strip() and depth == 1:
                         curr_arg += token.string
+                        in_starred = True
+                    else:
+                        # Add space between elements if needed
+                        if token.start[0] != last_pos[0] or token.start[1] - last_pos[1] > 0:
+                            curr_arg += f" {token.string}"
+                        else:
+                            curr_arg += token.string
             last_pos = token.end
+
+        # Exclude keyword arguments (like arg_name=True) from arg names
+        args = [arg for arg in args if '=' not in arg]
         return args
 
     def get_executing_function_call_str(self, frame: FrameType) -> Optional[str]:
